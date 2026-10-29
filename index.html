@@ -165,20 +165,56 @@
   </div>
 
   <script>
-    function handleFormSubmit(formObject) {
-      event.preventDefault(); // منع إعادة تحميل الصفحة
-      var btn = document.getElementById('submitBtn');
-      btn.innerText = 'جاري رفع الصور وإرسال الطلب... يرجى الانتظار';
-      btn.disabled = true;
+  // https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXrs3YN3GCna4TaNF_4gREqpopiq2RUUIVMnkMb3K5GMdT85M/exec
+  const scriptURL = 'ضع_رابط_سكربت_جوجل_هنا'; 
+  const form = document.querySelector('form');
+  const submitBtn = document.querySelector('button[type="submit"]');
 
-      // إرسال البيانات (شاملة الصور) إلى الخادم
-      google.script.run.withSuccessHandler(function(response) {
-        document.getElementById('supportForm').style.display = 'none';
-        var msgDiv = document.getElementById('success-message');
-        msgDiv.style.display = 'block';
-        msgDiv.innerText = response;
-      }).processForm(formObject);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'جاري رفع الصور وإرسال الطلب...';
+
+    // جمع بيانات الحقول النصية
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    // دالة تحويل الصور إلى تشفير Base64 ليتمكن الخادم من قراءتها
+    const getBase64 = (file) => new Promise((resolve, reject) => {
+      if (!file || file.size === 0) return resolve("");
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+
+    try {
+      // قراءة الصور من الحقول (تأكد أن حقول رفع الصور في الـ HTML تملك هذه الأسماء)
+      const cameraFile = document.querySelector('input[name="cameraSticker"]').files[0];
+      const boxFile = document.querySelector('input[name="boxSticker"]').files[0];
+
+      data.cameraSticker = await getBase64(cameraFile);
+      data.boxSticker = await getBase64(boxFile);
+
+      // إرسال البيانات للخادم
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+
+      if(response.ok) {
+        alert('تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).');
+        form.reset();
+      } else {
+        alert('حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.');
+      }
+    } catch (error) {
+      alert('تعذر الاتصال بالخادم: ' + error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'إرسال الطلب';
     }
-  </script>
+  });
+</script>
 </body>
 </html>
