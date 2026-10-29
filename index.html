@@ -99,7 +99,7 @@
   <div class="form-card">
     <h2>طلب دعم فني</h2>
     
-    <form id="supportForm" onsubmit="handleFormSubmit(this)">
+    <form>
       <div class="input-group">
         <label>اسم صاحب الطلب:</label>
         <input type="text" name="requesterName" required>
@@ -165,9 +165,9 @@
   </div>
 
   <script>
-  // https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXrs3YN3GCna4TaNF_4gREqpopiq2RUUIVMnkMb3K5GMdT85M/exec
-  const scriptURL = 'ضع_رابط_سكربت_جوجل_هنا'; 
-  const form = document.querySelector('form');
+  
+const scriptURL = 'https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXrs3YN3GCna4TaNF_4gREqpopiq2RUUIVMnkMb3K5GMDt85M/exec';
+    const form = document.querySelector('form');
   const submitBtn = document.querySelector('button[type="submit"]');
 
   form.addEventListener('submit', async (e) => {
