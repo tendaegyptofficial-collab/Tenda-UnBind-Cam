@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      margin: 0;
+    }
+    .form-card {
+      background: #ffffff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 500px;
+    }
+    .form-card h2 {
+      text-align: center;
+      color: #ff6600; /* لون مناسب للعلامات التجارية التقنية */
+      margin-bottom: 20px;
+      margin-top: 0;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .input-group input, .input-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .input-group input:focus, .input-group textarea:focus {
+      border-color: #ff6600;
+      outline: none;
+    }
+    .file-instructions {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+      display: block;
+    }
+    .notice-box {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #ffeeba;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #ff6600;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #e65c00;
+    }
+    #success-message {
+      display: none;
+      text-align: center;
+      color: #28a745;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid #c3e6cb;
+      background-color: #d4edda;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-card">
+    <h2>طلب دعم فني</h2>
+    
+    <form id="supportForm" onsubmit="handleFormSubmit(this)">
+      <div class="input-group">
+        <label>اسم صاحب الطلب:</label>
+        <input type="text" name="requesterName" required>
+      </div>
+
+      <div class="input-group">
+        <label>اسم الشركة:</label>
+        <input type="text" name="companyName" required>
+      </div>
+
+      <div class="input-group">
+        <label>رقم الهاتف المحمول (واتساب):</label>
+        <input type="tel" name="whatsapp" placeholder="للتواصل مع الدعم الفني" required>
+      </div>
+
+      <div class="input-group">
+        <label>Serial Number (الرقم المسلسل للجهاز):</label>
+        <input type="text" name="serialNumber" required>
+      </div>
+
+      <div class="input-group">
+        <label>UUID (الرقم التعريفي للجهاز):</label>
+        <input type="text" name="uuid" required>
+      </div>
+
+      <div class="input-group">
+        <label>Email للتواصل:</label>
+        <input type="email" name="email" required>
+      </div>
+
+      <div class="input-group">
+        <label>Model (موديل الجهاز):</label>
+        <input type="text" name="deviceModel" required>
+      </div>
+
+      <div class="input-group">
+        <label>وصف المشكلة:</label>
+        <textarea name="problem" rows="3" required></textarea>
+      </div>
+
+      <!-- حقول رفع الصور -->
+      <div class="input-group">
+        <label>صورة الملصق الموجود علي الكاميرا وبه السيريال:</label>
+        <input type="file" name="cameraSticker" accept="image/*" required>
+        <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
+      </div>
+
+      <div class="input-group">
+        <label>صورة الملصق الموجود على الكرتونة وبه السيريال:</label>
+        <input type="file" name="boxSticker" accept="image/*" required>
+        <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
+      </div>
+
+      <div class="notice-box">
+        سيتم الرد خلال <strong>(٤٨ ساعة عمل)</strong><br>
+        إلى عنوان البريد الإلكتروني المسجل في الطلب أعلاه.
+      </div>
+
+      <button type="submit" id="submitBtn">إرسال الطلب</button>
+    </form>
+    
+    <div id="success-message"></div>
+  </div>
+
+  <script>
+    function handleFormSubmit(formObject) {
+      event.preventDefault(); // منع إعادة تحميل الصفحة
+      var btn = document.getElementById('submitBtn');
+      btn.innerText = 'جاري رفع الصور وإرسال الطلب... يرجى الانتظار';
+      btn.disabled = true;
+
+      // إرسال البيانات (شاملة الصور) إلى الخادم
+      google.script.run.withSuccessHandler(function(response) {
+        document.getElementById('supportForm').style.display = 'none';
+        var msgDiv = document.getElementById('success-message');
+        msgDiv.style.display = 'block';
+        msgDiv.innerText = response;
+      }).processForm(formObject);
+    }
+  </script>
+</body>
+</html>
