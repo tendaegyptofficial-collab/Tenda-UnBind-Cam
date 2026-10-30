@@ -93,6 +93,7 @@
       border-radius: 6px;
     }
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -100,6 +101,7 @@
     <h2>طلب دعم فني</h2>
     
     <form>
+      <div id="buttonDiv" style="text-align: center; margin-bottom: 20px;"></div>
       <div class="input-group">
         <label>اسم صاحب الطلب:</label>
         <input type="text" name="requesterName" required>
@@ -164,22 +166,61 @@
     <div id="success-message"></div>
   </div>
 
-  <script>
-  
-const scriptURL = 'https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXrs3YN3GCna4TaNF_4gREqpopiq2RUUIVMnkMb3K5GMdT85M/exec';
-    const form = document.querySelector('form');
-  const submitBtn = document.querySelector('button[type="submit"]');
+<script>
+  // ⚠️ ضع رابط جوجل اسكربت الخاص بك هنا (الذي ينتهي بـ /exec)
+  const scriptURL = 'ضع_رابط_سكربت_جوجل_هنا'; 
 
+  const form = document.querySelector('form');
+  const submitBtn = document.querySelector('button[type="submit"]');
+  
+  // استدعاء حقول الاسم والإيميل (تأكد أن الخاصية name مطابقة لأسماء الحقول في الـ HTML لديك)
+  const nameInput = document.querySelector('input[name="requesterName"]');
+  const emailInput = document.querySelector('input[name="email"]');
+
+  // تعطيل زر الإرسال مبدئياً حتى يقوم العميل بتسجيل الدخول
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
+
+  // دالة التعامل مع استجابة جوجل بعد تسجيل الدخول
+  function handleCredentialResponse(response) {
+    // فك تشفير البيانات المرجعة من جوجل (JWT)
+    const data = JSON.parse(atob(response.credential.split('.')[1]));
+
+    // تعبئة الحقول تلقائياً
+    if(nameInput) nameInput.value = data.name;
+    if(emailInput) emailInput.value = data.email;
+
+    // قفل الحقول (للقراءة فقط) وتغيير لون الخلفية لتمييزها
+    if(nameInput) { nameInput.readOnly = true; nameInput.style.backgroundColor = "#e9ecef"; }
+    if(emailInput) { emailInput.readOnly = true; emailInput.style.backgroundColor = "#e9ecef"; }
+
+    // إخفاء زر جوجل وتفعيل زر الإرسال الخاص بك
+    document.getElementById("buttonDiv").style.display = "none";
+    submitBtn.disabled = false;
+    submitBtn.innerText = 'إرسال الطلب';
+  }
+
+  // تهيئة زر تسجيل الدخول عند تحميل الصفحة
+  window.onload = function () {
+    google.accounts.id.initialize({
+      client_id: '834579405034-gh14aesmusovvjgqsf74dk8nrvnu5hb8.apps.googleusercontent.com',
+      callback: handleCredentialResponse
+    });
+    google.accounts.id.renderButton(
+      document.getElementById("buttonDiv"),
+      { theme: "outline", size: "large", locale: "ar", text: "continue_with" }
+    );
+  };
+
+  // كود الإرسال إلى جوجل شيت
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
-    submitBtn.innerText = 'جاري رفع الصور وإرسال الطلب...';
+    submitBtn.innerText = 'جاري رفع الصور وإرسال الطلب... يرجى الانتظار';
 
-    // جمع بيانات الحقول النصية
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // دالة تحويل الصور إلى تشفير Base64 ليتمكن الخادم من قراءتها
     const getBase64 = (file) => new Promise((resolve, reject) => {
       if (!file || file.size === 0) return resolve("");
       const reader = new FileReader();
@@ -189,15 +230,16 @@ const scriptURL = 'https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXr
     });
 
     try {
-      // قراءة الصور من الحقول (تأكد أن حقول رفع الصور في الـ HTML تملك هذه الأسماء)
-      const cameraFile = document.querySelector('input[name="cameraSticker"]').files[0];
-      const boxFile = document.querySelector('input[name="boxSticker"]').files[0];
+      const cameraFileInput = document.querySelector('input[name="cameraSticker"]');
+      const boxFileInput = document.querySelector('input[name="boxSticker"]');
+      
+      const cameraFile = cameraFileInput ? cameraFileInput.files[0] : null;
+      const boxFile = boxFileInput ? boxFileInput.files[0] : null;
 
       data.cameraSticker = await getBase64(cameraFile);
       data.boxSticker = await getBase64(boxFile);
 
-      // إرسال البيانات للخادم
-     const response = await fetch(scriptURL, {
+      const response = await fetch(scriptURL, {
         method: 'POST',
         headers: {
           "Content-Type": "text/plain;charset=utf-8"
@@ -208,14 +250,17 @@ const scriptURL = 'https://script.google.com/macros/s/AKfycbwhUrOiwOpDzlnS5RxJXr
       if(response.ok) {
         alert('تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).');
         form.reset();
+        submitBtn.innerText = 'تم الإرسال';
       } else {
         alert('حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.');
       }
     } catch (error) {
       alert('تعذر الاتصال بالخادم: ' + error.message);
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'إرسال الطلب';
+      if(submitBtn.innerText !== 'تم الإرسال') {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'إرسال الطلب';
+      }
     }
   });
 </script>
