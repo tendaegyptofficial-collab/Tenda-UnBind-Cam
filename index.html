@@ -3,22 +3,28 @@
 <head>
   <base target="_top">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f7f6;
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      margin: 0;
-    }
-    .form-card {
-      background: #ffffff;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 500px;
-    }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* إضافة صورة خلفية تغطي الشاشة بالكامل */
+  background-image: url('https://drive.google.com/file/d/1nbVIIl1PJ1so0a6PLHJdUVp1aBYmWC6J/view?usp=drive_link'); 
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* لتثبيت الخلفية عند النزول بالصفحة */
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  margin: 0;
+}
+
+.form-card {
+  /* جعل خلفية الكارت بيضاء شفافة قليلاً (92%) ليظهر جمال الخلفية وراءه */
+  background: rgba(255, 255, 255, 0.92); 
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15); /* زيادة الظل لبروز أفضل */
+  width: 100%;
+  max-width: 500px;
+}
     .form-card h2 {
       text-align: center;
       color: #ff6600; /* لون مناسب للعلامات التجارية التقنية */
