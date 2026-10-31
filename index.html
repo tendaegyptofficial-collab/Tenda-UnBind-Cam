@@ -239,7 +239,7 @@ body {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
-    submitBtn.innerText = 'جاري رفع الصور وإرسال الطلب... يرجى الانتظار';
+    submitBtn.innerHTML = '<span class="spinner"></span> جاري المعالجة والرفع...';
 
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
@@ -287,7 +287,7 @@ body {
     } finally {
       if(submitBtn.innerText !== 'تم الإرسال') {
         submitBtn.disabled = false;
-        submitBtn.innerText = 'إرسال الطلب';
+        submitBtn.innerHTML = 'إرسال الطلب';
       }
     }
   });
