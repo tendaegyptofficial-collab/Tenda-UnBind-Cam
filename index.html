@@ -354,14 +354,6 @@ body {
       }
     }
     });
-      alert('تعذر الاتصال بالخادم: ' + error.message);
-    } finally {
-      if(submitBtn.innerText !== 'تم الإرسال') {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'إرسال الطلب';
-      }
-    }
-  });
 </script>
 </body>
 </html>
