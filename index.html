@@ -143,12 +143,12 @@ body {
 
       <div class="input-group">
         <label>Serial Number (الرقم المسلسل للجهاز):</label>
-        <input type="text" name="serialNumber" required>
+        <input type="text" name="serialNumber" required pattern="[a-zA-Z0-9]+" title="يرجى إدخال حروف إنجليزية وأرقام فقط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
       </div>
 
       <div class="input-group">
         <label>UUID (الرقم التعريفي للجهاز):</label>
-        <input type="text" name="uuid" required>
+        <input type="text" name="uuid" required pattern="[a-zA-Z0-9]+" title="يرجى إدخال حروف إنجليزية وأرقام فقط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
       </div>
 
       <div class="input-group">
@@ -158,7 +158,7 @@ body {
 
       <div class="input-group">
         <label>Model (موديل الجهاز):</label>
-        <input type="text" name="deviceModel" required>
+        <input type="text" name="model" required pattern="[a-zA-Z0-9]+" title="يرجى إدخال حروف إنجليزية وأرقام فقط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')">
       </div>
 
       <div class="input-group">
