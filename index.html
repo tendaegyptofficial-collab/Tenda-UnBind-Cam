@@ -7,9 +7,9 @@
   <base target="_top">
   
   <!-- استدعاء مكتبة SweetAlert2 للرسائل الاحترافية -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- استدعاء مكتبة تسجيل الدخول بجوجل -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- استدعاء مكتبة تسجيل الدخول بجوجل -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <style>
     body {
@@ -140,7 +140,9 @@
   <div class="form-card">
     <h2> طلب الغاء حساب(UnBind) </h2>
     
-    <form>
+    <!-- النموذج يوجه البيانات إلى الرابط وداخل الـ iframe المخفي -->
+    <form id="myForm" method="POST" target="hidden_iframe">
+      
       <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
         <div id="buttonDiv"></div>
         <div>
@@ -202,6 +204,10 @@
         <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
       </div>
 
+      <!-- حقول مخفية لمرور الصور المحولة إلى Base64 -->
+      <input type="hidden" name="cameraStickerBase64" id="cameraStickerBase64">
+      <input type="hidden" name="boxStickerBase64" id="boxStickerBase64">
+
       <div class="notice-box">
         سيتم الرد خلال <strong>(٤٨ ساعة عمل)</strong><br>
         إلى عنوان البريد الإلكتروني المسجل في الطلب أعلاه.
@@ -211,14 +217,18 @@
     </form>
   </div>
 
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxOK91a-oB1-3S1knwyy1Jwh1_qhr73m44szAE3GwypA9gDLP8uiM3G1UcZOfZRsK3nRw/exec'; 
+  <!-- إطار مخفي لاستقبال رد الإرسال وضمان عدم حدوث CORS -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(isSubmitted) { successAction(); }"></iframe>
 
-    const form = document.querySelector('form');
-    const submitBtn = document.querySelector('button[type="submit"]');
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwDjn_DHbGAR2n1K79ejDPiVHnZXllzERcjfP1MfvtYqgDhTCjl7twNPys1QHvZn3xBMA/exec'; 
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
     
     const nameInput = document.querySelector('input[name="requesterName"]');
     const emailInput = document.querySelector('input[name="email"]');
+
+    let isSubmitted = false;
 
     submitBtn.disabled = true;
     submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
@@ -249,13 +259,11 @@
       );
     };
 
+    // دالة ضغط الصور وإرسال النموذج
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="spinner"></span> جاري المعالجة والرفع...';
-
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
 
       const getBase64 = (file) => new Promise((resolve, reject) => {
         if (!file || file.size === 0) return resolve("");
@@ -293,62 +301,37 @@
         const cameraFileInput = document.querySelector('input[name="cameraSticker"]');
         const boxFileInput = document.querySelector('input[name="boxSticker"]');
         
-        data.cameraSticker = await getBase64(cameraFileInput ? cameraFileInput.files[0] : null);
-        data.boxSticker = await getBase64(boxFileInput ? boxFileInput.files[0] : null);
+        document.getElementById('cameraStickerBase64').value = await getBase64(cameraFileInput ? cameraFileInput.files[0] : null);
+        document.getElementById('boxStickerBase64').value = await getBase64(boxFileInput ? boxFileInput.files[0] : null);
 
-        // إرسال الطلب باستخدام fetch مع mode: 'cors' أو استخدام iframe / fetch العادي حسب استجابة الـ JSON
-        const response = await fetch(scriptURL, {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
+        form.action = scriptURL;
+        isSubmitted = true;
+        form.submit(); // إرسال النموذج مباشرة عبر الإطار المخفي
 
-        const result = await response.json(); 
-
-        if(result.status === "blocked_daily") {
-          Swal.fire({
-            icon: 'warning',
-            title: 'تجاوزت الحد المسموح',
-            text: 'عفواً، لقد استنفدت الحد الأقصى للطلبات (3 طلبات) لهذا اليوم. يرجى المحاولة مرة أخرى غداً.',
-            confirmButtonColor: '#ff6600',
-            confirmButtonText: 'حسناً'
-          });
-        } else if (result.status === "success") {
-          Swal.fire({
-            icon: 'success',
-            title: 'تم الإرسال بنجاح',
-            text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
-            confirmButtonColor: '#ff6600',
-            confirmButtonText: 'موافق'
-          });
-          form.reset();
-          submitBtn.innerHTML = 'تم الإرسال';
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'عفواً',
-            text: 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.',
-            confirmButtonColor: '#ff6600',
-            confirmButtonText: 'إغلاق'
-          });
-        }
       } catch (error) {
-        // في حال تم تطبيق mode: 'no-cors' سابقاً وكانت الاستجابة لا تقرأ، يمكننا اعتماد رسالة النجاح المباشرة
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'إرسال الطلب';
         Swal.fire({
-          icon: 'success',
-          title: 'تم الإرسال بنجاح',
-          text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
-          confirmButtonColor: '#ff6600',
-          confirmButtonText: 'موافق'
+          icon: 'error',
+          title: 'خطأ',
+          text: 'حدث خطأ أثناء معالجة الصور.',
+          confirmButtonColor: '#ff6600'
         });
-        form.reset();
-        submitBtn.innerHTML = 'تم الإرسال';
-      } finally {
-        if(submitBtn.innerHTML !== 'تم الإرسال') {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = 'إرسال الطلب';
-        }
       }
     });
+
+    function successAction() {
+      Swal.fire({
+        icon: 'success',
+        title: 'تم الإرسال بنجاح',
+        text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
+        confirmButtonColor: '#ff6600',
+        confirmButtonText: 'موافق'
+      });
+      form.reset();
+      submitBtn.innerHTML = 'تم الإرسال';
+      isSubmitted = false;
+    }
   </script>
 </body>
 </html>
