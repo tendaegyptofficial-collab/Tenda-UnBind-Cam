@@ -343,6 +343,22 @@
         submitBtn.innerHTML = 'إرسال الطلب';
       }
     });
+    // دالة قفل الزر وتغيير لونه ونصه عند التجاوز
+  function lockFormBtn() {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.style.backgroundColor = '#dc3545'; // لون أحمر تنبيهي
+    submitBtn.innerHTML = '🚫 عذراً، تجاوزت الحد الأقصى (3 طلبات) خلال 24 ساعة';
+  }
+
+  // دالة نجاح الإرسال وتفريغ النموذج
+  function successFormAction() {
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'إرسال الطلب';
+  }
   </script>
 </body>
 </html>
