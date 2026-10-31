@@ -253,12 +253,17 @@ body {
         body: JSON.stringify(data),
       });
 
-      if(response.ok) {
+// قراءة الرد القادم من جوجل لتحديد حالة العميل
+      const result = await response.json(); 
+
+      if(result.status === "blocked_daily") {
+        alert('عفواً، لقد استنفدت الحد الأقصى للطلبات (3 طلبات) لهذا اليوم. يرجى المحاولة مرة أخرى غداً.');
+      } else if (result.status === "success") {
         alert('تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).');
         form.reset();
         submitBtn.innerText = 'تم الإرسال';
       } else {
-        alert('حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.');
+        alert('حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.');
       }
     } catch (error) {
       alert('تعذر الاتصال بالخادم: ' + error.message);
