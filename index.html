@@ -137,7 +137,7 @@ body {
 
       <div class="input-group">
         <label>رقم الهاتف المحمول (واتساب):</label>
-        <input type="tel" name="whatsapp" placeholder="للتواصل مع الدعم الفني" required>
+        <input type="tel" name="whatsapp" placeholder="للتواصل مع الدعم الفني" required maxlength="11" pattern="[0-9]{11}" title="يرجى إدخال 11 رقماً فقط" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
       </div>
 
       <div class="input-group">
