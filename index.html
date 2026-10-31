@@ -162,3 +162,235 @@
         <label>اسم الشركة:</label>
         <input type="text" name="companyName" required>
       </div>
+
+      <div class="input-group">
+        <label>رقم الهاتف المحمول (واتساب):</label>
+        <input type="tel" name="whatsapp" placeholder="مثال: 01012345678" required maxlength="11" pattern="[0-9]{11}" title="يرجى إدخال 11 رقماً فقط" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+      </div>
+
+      <div class="input-group">
+        <label>Serial Number (الرقم المسلسل للجهاز):</label>
+        <input type="text" name="serialNumber" required minlength="17" maxlength="20" pattern="[a-zA-Z0-9]{10,20}" title="يرجى إدخال من 10 إلى 20 حرفاً أو رقماً" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
+      </div>
+
+      <div class="input-group">
+        <label>UUID (الرقم التعريفي للجهاز):</label>
+        <input type="text" name="uuid" required minlength="10" maxlength="10" pattern="[a-zA-Z0-9]{10}" title="يرجى إدخال 10 حرفاً أو رقماً بالضبط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
+      </div>
+
+      <div class="input-group">
+        <label>Email للتواصل:</label>
+        <input type="email" name="email" required>
+      </div>
+
+      <div class="input-group">
+        <label>Model (موديل الجهاز):</label>
+        <input type="text" name="model" required pattern="[a-zA-Z0-9\s\-]+" title="يرجى إدخال حروف إنجليزية وأرقام فقط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s\-]/g, '').toUpperCase()">
+      </div>
+
+      <div class="input-group">
+        <label>وصف المشكلة:</label>
+        <textarea name="problem" rows="3" required></textarea>
+      </div>
+
+      <div class="input-group">
+        <label>صورة الملصق الموجود علي الكاميرا وبه السيريال:</label>
+        <input type="file" name="cameraSticker" accept="image/*" required>
+        <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
+      </div>
+
+      <div class="input-group">
+        <label>صورة الملصق الموجود على الكرتونة وبه السيريال:</label>
+        <input type="file" name="boxSticker" accept="image/*" required>
+        <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
+      </div>
+
+      <!-- حقول مخفية للصور -->
+      <input type="hidden" name="cameraStickerBase64" id="cameraStickerBase64">
+      <input type="hidden" name="boxStickerBase64" id="boxStickerBase64">
+
+      <div class="notice-box">
+        سيتم الرد خلال <strong>(٤٨ ساعة عمل)</strong><br>
+        إلى عنوان البريد الإلكتروني المسجل في الطلب أعلاه.
+      </div>
+
+      <button type="submit" id="submitBtn">إرسال الطلب</button>
+    </form>
+  </div>
+
+  <!-- إطار مخفي لاستقبال الرد -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzzt6YkLqiemXDN2KRle3k4Mt-AsyddKkASqj8eEUTIZGWwToY1vZl9e9NqVPwEAl3EA/exec'; 
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    const nameInput = document.querySelector('input[name="requesterName"]');
+    const emailInput = document.querySelector('input[name="email"]');
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
+
+    // رسم زر جوجل عند تحميل الصفحة بضمان تام
+    window.onload = function () {
+      if (typeof google !== 'undefined' && google.accounts) {
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large", locale: "ar", text: "continue_with" }
+        );
+      }
+    };
+
+    function handleCredentialResponse(response) {
+      const base64Url = response.credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const data = JSON.parse(jsonPayload);
+
+      if(nameInput) nameInput.value = data.name;
+      if(emailInput) emailInput.value = data.email;
+
+      if(nameInput) { nameInput.readOnly = true; nameInput.style.backgroundColor = "#e9ecef"; }
+      if(emailInput) { emailInput.readOnly = true; emailInput.style.backgroundColor = "#e9ecef"; }
+
+      document.getElementById("buttonDiv").style.display = "none";
+      
+      // فحص الحظر المحلي بناءً على الإيميل ووقت آخر 24 ساعة
+      checkLocalBlock(data.email);
+    }
+
+    function checkLocalBlock(email) {
+      const historyData = JSON.parse(localStorage.getItem('tenda_history_' + email) || '[]');
+      const now = new Date().getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+
+      const recentAttempts = historyData.filter(time => (now - time) < oneDayMs);
+      localStorage.setItem('tenda_history_' + email, JSON.stringify(recentAttempts));
+
+      if (recentAttempts.length >= 3) {
+        lockFormBtn();
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'إرسال الطلب';
+      }
+    }
+
+    function lockFormBtn() {
+      submitBtn.disabled = true;
+      submitBtn.style.backgroundColor = '#dc3545'; // لون أحمر تنبيهي
+      submitBtn.innerHTML = '🚫 عذراً، تجاوزت الحد الأقصى (3 طلبات) خلال 24 ساعة';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userEmail = emailInput.value.trim().toLowerCase();
+      
+      let historyData = JSON.parse(localStorage.getItem('tenda_history_' + userEmail) || '[]');
+      const now = new Date().getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+
+      historyData = historyData.filter(time => (now - time) < oneDayMs);
+
+      if (historyData.length >= 3) {
+        lockFormBtn();
+        Swal.fire({
+          icon: 'error',
+          title: 'عفواً، تم حظر الطلب',
+          text: 'لقد استنفدت الحد الأقصى (3 طلبات) خلال الـ 24 ساعة الماضية. لا يمكنك التسجيل إلا في اليوم التالي.',
+          confirmButtonColor: '#dc3545',
+          confirmButtonText: 'حسناً'
+        });
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> جاري المعالجة والرفع...';
+
+      const getBase64 = (file) => new Promise((resolve, reject) => {
+        if (!file || file.size === 0) return resolve("");
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 800; 
+            const MAX_HEIGHT = 800; 
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+            resolve(dataUrl);
+          };
+          img.onerror = error => reject(error);
+        };
+        reader.onerror = error => reject(error);
+      });
+
+      try {
+        const cameraFileInput = document.querySelector('input[name="cameraSticker"]');
+        const boxFileInput = document.querySelector('input[name="boxSticker"]');
+        
+        document.getElementById('cameraStickerBase64').value = await getBase64(cameraFileInput ? cameraFileInput.files[0] : null);
+        document.getElementById('boxStickerBase64').value = await getBase64(boxFileInput ? boxFileInput.files[0] : null);
+
+        historyData.push(now);
+        localStorage.setItem('tenda_history_' + userEmail, JSON.stringify(historyData));
+
+        form.action = scriptURL;
+        form.submit();
+
+        setTimeout(() => {
+          if (historyData.length >= 3) {
+            lockFormBtn();
+            Swal.fire({
+              icon: 'warning',
+              title: 'تنبيه الحظر',
+              text: 'هذه هي محاولتك الثالثة خلال 24 ساعة. تم قفل النموذج ولن تتمكن من إرسال طلبات جديدة إلا غداً.',
+              confirmButtonColor: '#dc3545',
+              confirmButtonText: 'حسناً'
+            });
+          } else {
+            Swal.fire({
+              icon: 'success',
+              title: 'تم الإرسال بنجاح',
+              text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
+              confirmButtonColor: '#ff6600',
+              confirmButtonText: 'موافق'
+            });
+            form.reset();
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'إرسال الطلب';
+          }
+        }, 1500);
+
+      } catch (error) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'إرسال الطلب';
+        Swal.fire({
+          icon: 'success',
+          title: 'تم الإرسال بنجاح',
+          text: 'تم استلام طلبك بنجاح.',
+          confirmButtonColor: '#ff6600',
+          confirmButtonText: 'موافق'
+        });
+        form.reset();
+      }
+    });
+  </script>
+</body>
+</html>
