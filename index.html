@@ -140,7 +140,8 @@
   <div class="form-card">
     <h2> طلب الغاء حساب(UnBind) </h2>
     
-    <form id="myForm">
+    <!-- استخدام الـ iframe المخفي لضمان نجاح الإرسال بدون مشاكل CORS -->
+    <form id="myForm" method="POST" target="hidden_iframe">
       
       <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
         <div id="buttonDiv"></div>
@@ -203,6 +204,10 @@
         <span class="file-instructions">* يرجى التأكد من أن الصورة واضحة ومطابقة للملصق الأصلي.</span>
       </div>
 
+      <!-- حقول مخفية للصور -->
+      <input type="hidden" name="cameraStickerBase64" id="cameraStickerBase64">
+      <input type="hidden" name="boxStickerBase64" id="boxStickerBase64">
+
       <div class="notice-box">
         سيتم الرد خلال <strong>(٤٨ ساعة عمل)</strong><br>
         إلى عنوان البريد الإلكتروني المسجل في الطلب أعلاه.
@@ -212,183 +217,41 @@
     </form>
   </div>
 
-<script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzzt6YkLqiemXDN2KRle3k4Mt-AsyddKkASqj8eEUTIZGWwToY1vZl9e9NqVPwEAl3EA/exec'; 
-  const form = document.getElementById('myForm');
-  const submitBtn = document.getElementById('submitBtn');
-  
-  const nameInput = document.querySelector('input[name="requesterName"]');
-  const emailInput = document.querySelector('input[name="email"]');
+  <!-- إطار مخفي لاستقبال الرد -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-  submitBtn.disabled = true;
-  submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
-
-  function handleCredentialResponse(response) {
-    const base64Url = response.credential.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    const data = JSON.parse(jsonPayload);
-
-    if(nameInput) nameInput.value = data.name;
-    if(emailInput) emailInput.value = data.email;
-
-    if(nameInput) { nameInput.readOnly = true; nameInput.style.backgroundColor = "#e9ecef"; }
-    if(emailInput) { emailInput.readOnly = true; emailInput.style.backgroundColor = "#e9ecef"; }
-
-    document.getElementById("buttonDiv").style.display = "none";
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzzt6YkLqiemXDN2KRle3k4Mt-AsyddKkASqj8eEUTIZGWwToY1vZl9e9NqVPwEAl3EA/exec'; 
+    const form = document.getElementById('myForm');
+    const submitBtn = document.getElementById('submitBtn');
     
-    // التحقق هل هذا الإيميل محظور محلياً اليوم؟
-    checkLocalBlock(data.email);
-  }
-
-  window.onload = function () {
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      { theme: "outline", size: "large", locale: "ar", text: "continue_with" }
-    );
-  };
-
-  // دالة لفحص الحظر المحلي وتحديث الزر فوراً
-  function checkLocalBlock(email) {
-    const blockedData = JSON.parse(localStorage.getItem('tenda_blocked_' + email) || '{"count": 0, "time": 0}');
-    const now = new Date().getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-
-    if (blockedData.count >= 3 && (now - blockedData.time) < oneDayMs) {
-      lockFormBtn();
-    } else {
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'إرسال الطلب';
-    }
-  }
-
-  function lockFormBtn() {
-    submitBtn.disabled = true;
-    submitBtn.style.backgroundColor = '#dc3545'; // لون أحمر تنبيهي
-    submitBtn.innerHTML = '🚫 عذراً، تجاوزت الحد الأقصى (3 طلبات) خلال 24 ساعة';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userEmail = emailInput.value.trim().toLowerCase();
-    
-    // زيادة عدد المحاولات محلياً لتأكيد الحظر الفوري للعميل
-    let blockedData = JSON.parse(localStorage.getItem('tenda_blocked_' + userEmail) || '{"count": 0, "time": 0}');
-    const now = new Date().getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-
-    if ((now - blockedData.time) > oneDayMs) {
-      blockedData.count = 0; // إعادة العداد إذا مر أكثر من 24 ساعة
-    }
-
-    if (blockedData.count >= 3) {
-      lockFormBtn();
-      Swal.fire({
-        icon: 'error',
-        title: 'عفواً، تم حظر الطلب',
-        text: 'لقد استنفدت الحد الأقصى (3 طلبات) خلال الـ 24 ساعة الماضية. لا يمكنك التسجيل إلا في اليوم التالي.',
-        confirmButtonColor: '#dc3545',
-        confirmButtonText: 'حسناً'
-      });
-      return;
-    }
+    const nameInput = document.querySelector('input[name="requesterName"]');
+    const emailInput = document.querySelector('input[name="email"]');
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> جاري المعالجة والرفع...';
+    submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
 
-    const getBase64 = (file) => new Promise((resolve, reject) => {
-      if (!file || file.size === 0) return resolve("");
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 800; 
-          const MAX_HEIGHT = 800; 
-          let width = img.width;
-          let height = img.height;
+    function handleCredentialResponse(response) {
+      const base64Url = response.credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const data = JSON.parse(jsonPayload);
 
-          if (width > height) {
-            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-          } else {
-            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-          }
+      if(nameInput) nameInput.value = data.name;
+      if(emailInput) emailInput.value = data.email;
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
-          resolve(dataUrl);
-        };
-        img.onerror = error => reject(error);
-      };
-      reader.onerror = error => reject(error);
-    });
+      if(nameInput) { nameInput.readOnly = true; nameInput.style.backgroundColor = "#e9ecef"; }
+      if(emailInput) { emailInput.readOnly = true; emailInput.style.backgroundColor = "#e9ecef"; }
 
-    try {
-      const cameraFileInput = document.querySelector('input[name="cameraSticker"]');
-      const boxFileInput = document.querySelector('input[name="boxSticker"]');
+      document.getElementById("buttonDiv").style.display = "none";
       
-      const formData = new FormData(form);
-      formData.set('cameraStickerBase64', await getBase64(cameraFileInput ? cameraFileInput.files[0] : null));
-      formData.set('boxStickerBase64', await getBase64(boxFileInput ? boxFileInput.files[0] : null));
-
-      // إرسال الطلب للخادم
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        body: new URLSearchParams(formData)
-      });
-
-      // تسجيل المحاولة محلياً
-      blockedData.count++;
-      blockedData.time = now;
-      localStorage.setItem('tenda_blocked_' + userEmail, JSON.stringify(blockedData));
-
-      if (blockedData.count >= 3) {
-        lockFormBtn();
-        Swal.fire({
-          icon: 'warning',
-          title: 'تنبيه',
-          text: 'هذه هي المحاولة الثالثة لك خلال 24 ساعة. سيتم حظر الطلبات القادمة.',
-          confirmButtonColor: '#ff6600',
-          confirmButtonText: 'حسناً'
-        });
-      } else {
-        Swal.fire({
-          icon: 'success',
-          title: 'تم الإرسال بنجاح',
-          text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
-          confirmButtonColor: '#ff6600',
-          confirmButtonText: 'موافق'
-        });
-        form.reset();
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'إرسال الطلب';
-      }
-
-    } catch (error) {
-      // تسجيل المحاولة محلياً حتى في حال حدوث استثناء بالشبكة لضمان الحماية
-      blockedData.count++;
-      blockedData.time = now;
-      localStorage.setItem('tenda_blocked_' + userEmail, JSON.stringify(blockedData));
-
-      Swal.fire({
-        icon: 'success',
-        title: 'تم الإرسال بنجاح',
-        text: 'تم استلام طلبك بنجاح.',
-        confirmButtonColor: '#ff6600',
-        confirmButtonText: 'موافق'
-      });
-      form.reset();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = 'إرسال الطلب';
+      // فحص الحظر المحلي بناءً على الإيميل ووقت آخر 24 ساعة
+      checkLocalBlock(data.email);
     }
-  });
-</script>
-</body>
-</html>
+
+    window.onload = function () {
+      google.accounts.id.renderButton(
+        document.getElementById("buttonDiv"),
+        { theme: "outline", size: "large", locale: "ar", text: "continue_with" }
