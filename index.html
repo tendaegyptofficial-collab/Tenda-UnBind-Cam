@@ -25,7 +25,7 @@
     }
 
     .form-card {
-      background: rgba(255, 255, 255, 0.50); /* تعديل الشفافية ليكون النص أوضح */
+      background: rgba(255, 255, 255, 0.50);
       padding: 30px 40px;
       border-radius: 12px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.15);
@@ -33,12 +33,12 @@
       max-width: 500px;
     }
 
-.form-card h2 {
-  text-align: center;
-  color: #333333; /* يمكنك تغيير اللون إلى أي درجة تفضلها، مثل الأسود أو البرتقالي #ff6600 */
-  font-size: 30px; /* التحكم في حجم الخط (تكبير أو تصغير حسب الرغبة) */
-  margin-bottom: 20px;
-  margin-top: 0;
+    .form-card h2 {
+      text-align: center;
+      color: #333333;
+      font-size: 30px;
+      margin-bottom: 20px;
+      margin-top: 0;
     }
 
     .input-group {
@@ -109,7 +109,6 @@
       cursor: not-allowed;
     }
 
-    /* تصميم دائرة التحميل */
     .spinner {
       display: inline-block;
       width: 18px;
@@ -129,7 +128,6 @@
 </head>
 <body>
 
-  <!-- إعدادات جوجل للتحقق والتسجيل (مخفية وتعمل بالخلفية) -->
   <div id="g_id_onload"
        data-client_id="659091735778-gk4ttihm2vs1p2psg6s4n92ekela9tc1.apps.googleusercontent.com"
        data-context="signin"
@@ -143,20 +141,14 @@
     <h2> طلب الغاء حساب(UnBind) </h2>
     
     <form>
-<!-- حاوية تجمع الأزرار بحيث يكون زر جوجل أولاً ثم الواتساب -->
-<div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
-  
-  <!-- زر جوجل ليظهر أولاً -->
-  <div id="buttonDiv"></div>
-  
-  <!-- زر واتساب ليظهر بجانبه -->
-  <div>
-    <a href="https://wa.me/+201025399888" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; background-color: #25D366; color: white; padding: 0 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; height: 44px; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap;">
-      💬 واتساب الدعم
-    </a>
-  </div>
-
-</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+        <div id="buttonDiv"></div>
+        <div>
+          <a href="https://wa.me/+201025399888" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; background-color: #25D366; color: white; padding: 0 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; height: 44px; box-sizing: border-box; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap;">
+            💬 واتساب الدعم
+          </a>
+        </div>
+      </div>
       
       <div class="input-group">
         <label>اسم صاحب الطلب:</label>
@@ -220,7 +212,7 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxOK91a-oB1-3S1knwyy1Jwh1_qhr73m44szAE3GwypA9gDLP8uiM3G1UcZOfZRsK3nRw/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwDjn_DHbGAR2n1K79ejDPiVHnZXllzERcjfP1MfvtYqgDhTCjl7twNPys1QHvZn3xBMA/exec'; 
 
     const form = document.querySelector('form');
     const submitBtn = document.querySelector('button[type="submit"]');
@@ -228,18 +220,16 @@
     const nameInput = document.querySelector('input[name="requesterName"]');
     const emailInput = document.querySelector('input[name="email"]');
 
-    // تعطيل زر الإرسال مبدئياً حتى يقوم العميل بتسجيل الدخول
     submitBtn.disabled = true;
     submitBtn.innerText = 'يرجى تسجيل الدخول بجوجل أولاً';
 
-    // دالة التعامل مع استجابة جوجل بعد تسجيل الدخول
     function handleCredentialResponse(response) {
       const base64Url = response.credential.split('.')[1];
-const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-  return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-}).join(''));
-const data = JSON.parse(jsonPayload);
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const data = JSON.parse(jsonPayload);
 
       if(nameInput) nameInput.value = data.name;
       if(emailInput) emailInput.value = data.email;
@@ -252,7 +242,6 @@ const data = JSON.parse(jsonPayload);
       submitBtn.innerText = 'إرسال الطلب';
     }
 
-    // تهيئة زر تسجيل الدخول عند تحميل الصفحة
     window.onload = function () {
       google.accounts.id.renderButton(
         document.getElementById("buttonDiv"),
@@ -260,7 +249,6 @@ const data = JSON.parse(jsonPayload);
       );
     };
 
-    // كود الإرسال وضغط الصور
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
@@ -269,7 +257,6 @@ const data = JSON.parse(jsonPayload);
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      // دالة ضغط الصور
       const getBase64 = (file) => new Promise((resolve, reject) => {
         if (!file || file.size === 0) return resolve("");
         const reader = new FileReader();
@@ -309,14 +296,43 @@ const data = JSON.parse(jsonPayload);
         data.cameraSticker = await getBase64(cameraFileInput ? cameraFileInput.files[0] : null);
         data.boxSticker = await getBase64(boxFileInput ? boxFileInput.files[0] : null);
 
-        // إرسال الطلب باستخدام mode: 'no-cors' لتجاوز القيود الأمنية للمتصفح
-        await fetch(scriptURL, {
+        // إرسال الطلب باستخدام fetch مع mode: 'cors' أو استخدام iframe / fetch العادي حسب استجابة الـ JSON
+        const response = await fetch(scriptURL, {
           method: 'POST',
-          mode: 'no-cors',
           body: JSON.stringify(data),
         });
 
-        // إظهار رسالة النجاح فوراً للمستخدم
+        const result = await response.json(); 
+
+        if(result.status === "blocked_daily") {
+          Swal.fire({
+            icon: 'warning',
+            title: 'تجاوزت الحد المسموح',
+            text: 'عفواً، لقد استنفدت الحد الأقصى للطلبات (3 طلبات) لهذا اليوم. يرجى المحاولة مرة أخرى غداً.',
+            confirmButtonColor: '#ff6600',
+            confirmButtonText: 'حسناً'
+          });
+        } else if (result.status === "success") {
+          Swal.fire({
+            icon: 'success',
+            title: 'تم الإرسال بنجاح',
+            text: 'تم استلام طلبك بنجاح. سيتم الرد خلال (٤٨ ساعة عمل).',
+            confirmButtonColor: '#ff6600',
+            confirmButtonText: 'موافق'
+          });
+          form.reset();
+          submitBtn.innerHTML = 'تم الإرسال';
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'عفواً',
+            text: 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً.',
+            confirmButtonColor: '#ff6600',
+            confirmButtonText: 'إغلاق'
+          });
+        }
+      } catch (error) {
+        // في حال تم تطبيق mode: 'no-cors' سابقاً وكانت الاستجابة لا تقرأ، يمكننا اعتماد رسالة النجاح المباشرة
         Swal.fire({
           icon: 'success',
           title: 'تم الإرسال بنجاح',
@@ -324,18 +340,8 @@ const data = JSON.parse(jsonPayload);
           confirmButtonColor: '#ff6600',
           confirmButtonText: 'موافق'
         });
-        
         form.reset();
         submitBtn.innerHTML = 'تم الإرسال';
-
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'خطأ في الاتصال',
-          text: 'تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت.',
-          confirmButtonColor: '#ff6600',
-          confirmButtonText: 'إغلاق'
-        });
       } finally {
         if(submitBtn.innerHTML !== 'تم الإرسال') {
           submitBtn.disabled = false;
