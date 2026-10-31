@@ -162,12 +162,12 @@
 
       <div class="input-group">
         <label>Serial Number (الرقم المسلسل للجهاز):</label>
-        <input type="text" name="serialNumber" required minlength="12" pattern="[a-zA-Z0-9]{12,}" title="يرجى إدخال 12 حرفاً أو رقماً على الأقل" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
+        <input type="text" name="serialNumber" required minlength="17" maxlength="20" pattern="[a-zA-Z0-9]{10,20}" title="يرجى إدخال من 10 إلى 20 حرفاً أو رقماً" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
       </div>
 
       <div class="input-group">
         <label>UUID (الرقم التعريفي للجهاز):</label>
-        <input type="text" name="uuid" required pattern="[a-zA-Z0-9]+" title="يرجى إدخال حروف إنجليزية وأرقام فقط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
+        <input type="text" name="uuid" required minlength="10" maxlength="15" pattern="[a-zA-Z0-9]{16}" title="يرجى إدخال 16 حرفاً أو رقماً بالضبط" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()">
       </div>
 
       <div class="input-group">
